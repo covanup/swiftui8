@@ -35,24 +35,25 @@ struct VolumeView: View {
                 .overlay(alignment: .bottom) {
                     Rectangle()
                         .fill(.white)
-                        .frame(height: size.height * volume, alignment: .bottom)
+                        .frame(height: size.height * max(min(volume, 1),0), alignment: .bottom)
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 .gesture(
                     DragGesture(coordinateSpace: .local)
                         .onChanged { gesture in
-                            let delta = (gestureProgress-gesture.translation.height) / size.height
-                            volume = max(min(volume + delta, 1), 0)
+                            let delta = (gestureProgress - gesture.translation.height) / size.height
+                            volume = volume + delta
                             gestureProgress = gesture.translation.height
-                            scaled = volume == 1 || volume == 0 ? scale : 1
+                            scaled = volume >= 1 || volume <= 0 ? scale : 1
                         }
                         .onEnded { _ in
+                            volume = max(min(volume, 1),0)
                             gestureProgress = 0
                             scaled = 1
                         }
                 )
         }
-        .scaleEffect(x: scaled, y: 1 + (1 - scaled), anchor: .center)
+        .scaleEffect(x: scaled, y: 1 + (1 - scaled), anchor: volume >= 1 ? .bottom : .top)
         .animation(.easeInOut(duration: 0.5), value: scaled)
     }
 }
